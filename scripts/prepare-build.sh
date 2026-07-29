@@ -124,6 +124,18 @@ fi
 
 log::info "Build environment ready for variant '$VARIANT' on device '$DEVICE'."
 
-# 修改小米AX3600固件大小限制以适配大分区
-[ -f target/linux/qualcommax/image/ipq807x.mk ] && sed -i 's/rootfs_size=30464k/rootfs_size=163840k/g' target/linux/qualcommax/image/ipq807x.mk
+# 1. 修复上游 nftables Kconfig 的递归依赖报错 (Bug Fix)
+if [ -f package/network/config/firewall4/Makefile ]; then
+    sed -i 's/PACKAGE_nftables-nojson:PACKAGE_nftables-nojson/PACKAGE_nftables-nojson/g' tmp/.config-package.in 2>/dev/null || true
+fi
+
+# 2. 强行修改源码中的 AX3600 分区镜像上限限制
+if [ -f target/linux/qualcommax/image/ipq807x.mk ]; then
+    sed -i 's/rootfs_size=30464k/rootfs_size=163840k/g' target/linux/qualcommax/image/ipq807x.mk
+fi
+
+# 3. 强行改写高通架构 Kconfig 的默认 rootfs 分区大小定义，绕过 defconfig 检查
+if [ -f target/linux/qualcommax/config-default ]; then
+    sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=160/g' target/linux/qualcommax/config-default
+fi
 
