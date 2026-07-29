@@ -156,9 +156,6 @@ CONFIG_KERNEL_DEVMEM=y
 CONFIG_BUSYBOX_CUSTOM=y
 CONFIG_BUSYBOX_CONFIG_DEVMEM=y
 
-CONFIG_TARGET_ROOTFS_PARTSIZE=160
-CONFIG_TARGET_UBIFS_FREE_SPACE_FIXUP=y
-
 ## Crash forensics: persist the kernel console and panic traces across
 ## reboots in the board's ramoops region; the image archives them to
 ## /root/pstore on the next boot.
