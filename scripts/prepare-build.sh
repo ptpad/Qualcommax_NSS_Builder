@@ -123,3 +123,7 @@ if [[ -f files/etc/ssh/sshd_config ]]; then
 fi
 
 log::info "Build environment ready for variant '$VARIANT' on device '$DEVICE'."
+
+# 修改小米AX3600固件大小限制以适配大分区
+[ -f target/linux/qualcommax/image/ipq807x.mk ] && sed -i 's/rootfs_size=30464k/rootfs_size=163840k/g' target/linux/qualcommax/image/ipq807x.mk
+
