@@ -1,1 +1,33 @@
-
+diff --git a/target/linux/qualcommax/dts/qcom-ipq8072-xiaomi-ax3600.dts b/target/linux/qualcommax/dts/qcom-ipq8072-xiaomi-ax3600.dts
+index 92f8d230..78e24138 100644
+--- a/target/linux/qualcommax/dts/qcom-ipq8072-xiaomi-ax3600.dts
++++ b/target/linux/qualcommax/dts/qcom-ipq8072-xiaomi-ax3600.dts
+@@ -44,22 +44,11 @@ partitions {
+ 		compatible = "fixed-partitions";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+-
+ 		partition@0 {
+ 			label = "kernel";
+ 			reg = <0x00000000 0x00400000>;
+ 		};
+-
+-		partition@400000 {
+-			label = "kernel_1";
+-			reg = <0x00400000 0x00400000>;
+-		};
+-
+-		partition@800000 {
+-			label = "rootfs";
+-			reg = <0x00800000 0x02200000>;
+-		};
+-
+-		partition@2a00000 {
+-			label = "rootfs_1";
+-			reg = <0x02a00000 0x02200000>;
++		partition@400000 {
++			label = "rootfs";
++			reg = <0x00400000 0x04800000>;
+ 		};
+ 	};
+ };
