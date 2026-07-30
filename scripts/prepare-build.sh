@@ -124,21 +124,12 @@ fi
 
 log::info "Build environment ready for variant '$VARIANT' on device '$DEVICE'."
 
-# 1. 修复上游 nftables Kconfig 的递归依赖报错 (Bug Fix)
 if [ -f package/network/config/firewall4/Makefile ]; then
     sed -i 's/PACKAGE_nftables-nojson:PACKAGE_nftables-nojson/PACKAGE_nftables-nojson/g' tmp/.config-package.in 2>/dev/null || true
 fi
 
-# 2. 物理层面对齐：清除并拒绝所有 160M / 163840k 的硬改代码，完美顺应当前 stock 布局
-# （直接留空，不执行任何强行扩大 rootfs_size 的操作，依靠 UBI 动态挂载 211M 的 rootfs_data）
-
-# 3. 网络层面拯救：强行修正 24.10 分支下 AX3600 网口颠倒、不发 IP 的暗坑
-# 在编译前改写系统底层的初始化网络配置文件，将 eth0, eth1, eth2, eth3 全部划归 LAN 网桥
 if [ -f target/linux/qualcommax/base-files/etc/board.d/02_network ]; then
     sed -i '/xiaomi,ax3600/,/;;/ {
         s/ucidef_set_interfaces_lan_wan.*/ucidef_set_interfaces_lan_wan "eth0 eth1 eth2 eth3" "none"/g
     }' target/linux/qualcommax/base-files/etc/board.d/02_network
 fi
-
-
-
