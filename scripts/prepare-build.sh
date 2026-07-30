@@ -129,13 +129,16 @@ if [ -f package/network/config/firewall4/Makefile ]; then
     sed -i 's/PACKAGE_nftables-nojson:PACKAGE_nftables-nojson/PACKAGE_nftables-nojson/g' tmp/.config-package.in 2>/dev/null || true
 fi
 
-# 2. 强行修改源码中的 AX3600 分区镜像上限限制
-if [ -f target/linux/qualcommax/image/ipq807x.mk ]; then
-    sed -i 's/rootfs_size=30464k/rootfs_size=163840k/g' target/linux/qualcommax/image/ipq807x.mk
+# 2. 物理层面对齐：清除并拒绝所有 160M / 163840k 的硬改代码，完美顺应当前 stock 布局
+# （直接留空，不执行任何强行扩大 rootfs_size 的操作，依靠 UBI 动态挂载 211M 的 rootfs_data）
+
+# 3. 网络层面拯救：强行修正 24.10 分支下 AX3600 网口颠倒、不发 IP 的暗坑
+# 在编译前改写系统底层的初始化网络配置文件，将 eth0, eth1, eth2, eth3 全部划归 LAN 网桥
+if [ -f target/linux/qualcommax/base-files/etc/board.d/02_network ]; then
+    sed -i '/xiaomi,ax3600/,/;;/ {
+        s/ucidef_set_interfaces_lan_wan.*/ucidef_set_interfaces_lan_wan "eth0 eth1 eth2 eth3" "none"/g
+    }' target/linux/qualcommax/base-files/etc/board.d/02_network
 fi
 
-# 3. 强行改写高通架构 Kconfig 的默认 rootfs 分区大小定义，绕过 defconfig 检查
-if [ -f target/linux/qualcommax/config-default ]; then
-    sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=160/g' target/linux/qualcommax/config-default
-fi
+
 
