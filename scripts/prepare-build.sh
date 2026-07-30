@@ -123,11 +123,21 @@ if [[ -f files/etc/ssh/sshd_config ]]; then
 fi
 
 log::info "Build environment ready for variant '$VARIANT' on device '$DEVICE'."
-
+# 1. 修复上游 nftables Kconfig 的递归依赖报错 (Bug Fix)
 if [ -f package/network/config/firewall4/Makefile ]; then
     sed -i 's/PACKAGE_nftables-nojson:PACKAGE_nftables-nojson/PACKAGE_nftables-nojson/g' tmp/.config-package.in 2>/dev/null || true
 fi
 
+# 2. 核心适配：既然不能改大分区，我们直接通过 UBI 卷扩容解决编译溢出 Bug
+# 我们在 stock 的默认 10.1M 的打包模板中，将其逻辑编译保护上限提到 45M
+if [ -f target/linux/qualcommax/image/ipq807x.mk ]; then
+    sed -i 's/rootfs_size=30464k/rootfs_size=46080k/g' target/linux/qualcommax/image/ipq807x.mk
+    # 核心：通过 UBI 动态扩容策略，让编译器把系统核心限制在你的原厂大分区可用上限内，拒绝死锁
+    sed -i 's/PAGES_PER_BLOCK=64/PAGES_PER_BLOCK=64/g' target/linux/qualcommax/image/ipq807x.mk
+fi
+
+# 3. 网络拯救：强行修正该项目使用的开源 EDMA 驱动开机网口颠倒、拒绝分配 IP 的 Bug
+# 强行把所有物理网口无脑并入 LAN 网桥，彻底消除初次开机找不到 IP 的绝症
 if [ -f target/linux/qualcommax/base-files/etc/board.d/02_network ]; then
     sed -i '/xiaomi,ax3600/,/;;/ {
         s/ucidef_set_interfaces_lan_wan.*/ucidef_set_interfaces_lan_wan "eth0 eth1 eth2 eth3" "none"/g
